@@ -1,32 +1,522 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="de">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitStats - GitHub Badge Generator</title>
-    <link rel="stylesheet" href="styles.css">
+    <title>GitStats Pro - GitHub Badge Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #0d1117 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #c9d1d9;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body.svg-mode {
+            background: transparent;
+            padding: 0;
+            margin: 0;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(88, 166, 255, 0.03) 1px, transparent 1px);
+            background-size: 30px 30px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+        }
+
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(30px, 30px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 50px;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #58a6ff 0%, #8957e5 50%, #ff6b9d 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 800;
+            letter-spacing: -2px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            color: #8b949e;
+            margin-bottom: 10px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 6px 12px;
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 20px;
+            font-size: 0.85em;
+            color: #58a6ff;
+            font-weight: 600;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+            animation: fadeIn 1s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid #30363d;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(88, 166, 255, 0.2);
+        }
+
+        .card h2 {
+            color: #58a6ff;
+            margin-bottom: 25px;
+            font-size: 1.4em;
+            border-bottom: 2px solid #30363d;
+            padding-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #c9d1d9;
+            font-weight: 600;
+            font-size: 0.95em;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            font-size: 1em;
+            background: #161b22;
+            color: #c9d1d9;
+            transition: all 0.3s;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 4px rgba(88, 166, 255, 0.1);
+        }
+
+        .theme-presets {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .theme-btn {
+            padding: 12px;
+            border: 2px solid #30363d;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #161b22;
+            color: #c9d1d9;
+            font-weight: 600;
+            font-size: 0.9em;
+        }
+
+        .theme-btn:hover {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .theme-btn.active {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.2);
+        }
+
+        .color-input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        .color-input-group input[type="text"] {
+            flex: 1;
+        }
+
+        .color-picker {
+            width: 50px;
+            height: 46px;
+            padding: 2px;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #161b22;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 25px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #58a6ff 0%, #79c0ff 100%);
+            color: #0d1117;
+        }
+
+        .btn-generate:hover {
+            background: linear-gradient(135deg, #79c0ff 0%, #a0d8ff 100%);
+        }
+
+        .btn-reset {
+            background: #21262d;
+            color: #c9d1d9;
+            border: 1px solid #30363d;
+        }
+
+        .btn-reset:hover {
+            background: #30363d;
+        }
+
+        .preview-container {
+            background: #161b22;
+            border: 2px dashed #30363d;
+            border-radius: 12px;
+            padding: 30px;
+            min-height: 300px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+        }
+
+        .preview-svg {
+            max-width: 100%;
+            height: auto;
+            filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.4));
+            animation: slideUp 0.5s ease-out;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .badge-link-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 15px;
+        }
+
+        .badge-link-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: #58a6ff;
+            font-weight: 700;
+            font-size: 1.05em;
+        }
+
+        .code-output {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            font-family: 'SF Mono', Monaco, Consolas, monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            color: #79c0ff;
+            line-height: 1.6;
+            margin-bottom: 10px;
+        }
+
+        .copy-btn {
+            width: 100%;
+            padding: 10px 20px;
+            background: #21262d;
+            color: #58a6ff;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .copy-btn:hover {
+            background: #30363d;
+            border-color: #58a6ff;
+            transform: translateY(-2px);
+        }
+
+        .copy-btn.success {
+            background: #238636;
+            border-color: #238636;
+            color: #ffffff;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #30363d;
+        }
+
+        .tab-btn {
+            padding: 12px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #8b949e;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95em;
+        }
+
+        .tab-btn.active {
+            color: #58a6ff;
+            border-bottom-color: #58a6ff;
+        }
+
+        .tab-btn:hover:not(.active) {
+            color: #c9d1d9;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+            animation: fadeIn 0.3s ease-out;
+        }
+
+        .empty-state {
+            color: #8b949e;
+            font-size: 1.1em;
+            text-align: center;
+        }
+
+        .loading-spinner {
+            border: 3px solid #30363d;
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: rgba(88, 166, 255, 0.05);
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: 700;
+            color: #58a6ff;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.85em;
+            color: #8b949e;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .info-box {
+            background: rgba(88, 166, 255, 0.08);
+            border: 1px solid rgba(88, 166, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            color: #8b949e;
+            font-size: 0.9em;
+            line-height: 1.6;
+        }
+
+        .badge-types {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .badge-type-btn {
+            flex: 1;
+            padding: 10px;
+            background: #161b22;
+            border: 2px solid #30363d;
+            border-radius: 8px;
+            color: #c9d1d9;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .badge-type-btn:hover {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.1);
+        }
+
+        .badge-type-btn.active {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+        }
+
+        @media (max-width: 1200px) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 2.5em;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .theme-presets {
+                grid-template-columns: 1fr;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>⚡ GitStats by Kai</h1>
-            <p>Create Cool GitHub Stats Badges</p>
-            <span class="badge">✨ SVG Download for GitHub README</span>
-        </div>
-
-        <div class="alert">
-            <strong>⚠️ Important Note:</strong>
-            HTML-based badge links maybe don't work directly on GitHub. You must <strong>download</strong> the generated SVG files and upload them directly to your repository. Alternatively, you can use a service like <strong>shields.io</strong> or your own backend server.
+            <h1>⚡ GitStats Pro</h1>
+            <p>Erstelle professionelle GitHub Stats Badges mit erweiterten Features</p>
+            <span class="badge">✨ Neu: Theme Presets & erweiterte Stats</span>
         </div>
 
         <div class="content-grid">
-            <!-- Settings Sidebar -->
+            <!-- Einstellungen Sidebar -->
             <div class="card">
-                <h2>⚙️ Settings</h2>
+                <h2>⚙️ Einstellungen</h2>
 
                 <div class="form-group">
                     <label>GitHub Username</label>
-                    <input type="text" id="username" placeholder="e.g. torvalds" />
+                    <input type="text" id="username" placeholder="z.B. torvalds" />
                 </div>
 
                 <div class="tabs">
@@ -49,7 +539,7 @@
                 <!-- Custom Tab -->
                 <div id="custom" class="tab-content">
                     <div class="form-group">
-                        <label>Title Color</label>
+                        <label>Titel Farbe</label>
                         <div class="color-input-group">
                             <input type="text" id="titleColor" value="58a6ff" />
                             <input type="color" id="titleColorPicker" class="color-picker" value="#58a6ff" />
@@ -57,7 +547,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Background</label>
+                        <label>Hintergrund</label>
                         <div class="color-input-group">
                             <input type="text" id="bgColor" value="0d1117" />
                             <input type="color" id="bgColorPicker" class="color-picker" value="#0d1117" />
@@ -65,7 +555,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Text Color</label>
+                        <label>Text Farbe</label>
                         <div class="color-input-group">
                             <input type="text" id="textColor" value="c9d1d9" />
                             <input type="color" id="textColorPicker" class="color-picker" value="#c9d1d9" />
@@ -73,7 +563,7 @@
                     </div>
 
                     <div class="form-group">
-                        <label>Accent Color</label>
+                        <label>Akzent Farbe</label>
                         <div class="color-input-group">
                             <input type="text" id="accentColor" value="58a6ff" />
                             <input type="color" id="accentColorPicker" class="color-picker" value="#58a6ff" />
@@ -82,46 +572,45 @@
                 </div>
 
                 <div class="info-box">
-                    💡 Choose a theme or customize colors, then download the SVGs!
+                    💡 Die generierten Markdown-Links kannst du direkt in dein GitHub README kopieren!
                 </div>
 
                 <div class="button-group">
-                    <button class="btn btn-generate" onclick="generateBadge()">🚀 Generate</button>
+                    <button class="btn btn-generate" onclick="generateBadge()">🚀 Generieren</button>
                     <button class="btn btn-reset" onclick="resetForm()">↺ Reset</button>
                 </div>
             </div>
 
             <!-- Preview & Results -->
             <div class="card">
-                <h2>👁️ Preview & Download</h2>
+                <h2>👁️ Vorschau & Export</h2>
                 
                 <div class="badge-types">
-                    <button class="badge-type-btn active" data-type="stats" onclick="switchBadgeType('stats')">📊 Stats</button>
-                    <button class="badge-type-btn" data-type="languages" onclick="switchBadgeType('languages')">💻 Languages</button>
-                    <button class="badge-type-btn" data-type="streak" onclick="switchBadgeType('streak')">🔥 Streak</button>
+                    <button class="badge-type-btn active" data-type="stats">📊 Stats</button>
+                    <button class="badge-type-btn" data-type="languages">💻 Languages</button>
+                    <button class="badge-type-btn" data-type="streak">🔥 Streak</button>
                 </div>
 
                 <div class="preview-container" id="previewContainer">
-                    <span class="empty-state">👆 Enter a GitHub username and click Generate</span>
+                    <span class="empty-state">👆 Gib einen GitHub Username ein und klicke auf Generieren</span>
                 </div>
 
                 <div id="statsSection" style="display: none;">
                     <div class="stats-grid" id="statsGrid"></div>
                 </div>
 
-                <div id="downloadSection" style="display: none;">
-                    <h3 style="color: #58a6ff; margin: 25px 0 15px 0; font-size: 1.1em;">💾 Downloads for your README:</h3>
+                <div id="linksSection" style="display: none;">
+                    <h3 style="color: #58a6ff; margin: 25px 0 15px 0; font-size: 1.1em;">📝 Markdown Links für dein README:</h3>
                     
                     <!-- Stats Badge -->
                     <div class="badge-link-section">
                         <div class="badge-link-header">
                             📊 GitHub Stats Badge
                         </div>
-                        <div class="download-section">
-                            <button class="download-btn" onclick="downloadSVG('stats')">💾 Download SVG</button>
-                            <button class="copy-btn" onclick="copyMarkdown('stats', this)" style="flex: 1;">📋 Copy Markdown</button>
-                        </div>
-                        <div class="code-output" id="statsMarkdown" style="margin-top: 10px; display: none;"></div>
+                        <div class="code-output" id="statsLink"></div>
+                        <button class="copy-btn" onclick="copyToClipboard('statsLink', this)">
+                            📋 Link kopieren
+                        </button>
                     </div>
 
                     <!-- Languages Badge -->
@@ -129,11 +618,10 @@
                         <div class="badge-link-header">
                             💻 Most Used Languages Badge
                         </div>
-                        <div class="download-section">
-                            <button class="download-btn" onclick="downloadSVG('languages')">💾 Download SVG</button>
-                            <button class="copy-btn" onclick="copyMarkdown('languages', this)" style="flex: 1;">📋 Copy Markdown</button>
-                        </div>
-                        <div class="code-output" id="languagesMarkdown" style="margin-top: 10px; display: none;"></div>
+                        <div class="code-output" id="languagesLink"></div>
+                        <button class="copy-btn" onclick="copyToClipboard('languagesLink', this)">
+                            📋 Link kopieren
+                        </button>
                     </div>
 
                     <!-- Streak Badge -->
@@ -141,24 +629,344 @@
                         <div class="badge-link-header">
                             🔥 GitHub Streak Badge
                         </div>
-                        <div class="download-section">
-                            <button class="download-btn" onclick="downloadSVG('streak')">💾 Download SVG</button>
-                            <button class="copy-btn" onclick="copyMarkdown('streak', this)" style="flex: 1;">📋 Copy Markdown</button>
-                        </div>
-                        <div class="code-output" id="streakMarkdown" style="margin-top: 10px; display: none;"></div>
-                    </div>
-
-                    <div class="info-box">
-                        <strong>📝 How to use the badges:</strong><br>
-                        1. Click "Download SVG" for each badge<br>
-                        2. Upload the SVG files to your GitHub repository (e.g. in a "badges" folder)<br>
-                        3. Then use in your README: <code>![Badge Name](./badges/filename.svg)</code>
+                        <div class="code-output" id="streakLink"></div>
+                        <button class="copy-btn" onclick="copyToClipboard('streakLink', this)">
+                            📋 Link kopieren
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script>
+        // API Mode - Check if URL has parameters to generate badge directly
+        const params = new URLSearchParams(window.location.search);
+        const apiUsername = params.get('username');
+
+        if (apiUsername) {
+            // SVG Mode - render only SVG
+            document.body.classList.add('svg-mode');
+            document.querySelector('.container').remove();
+            
+            const type = params.get('type') || 'stats';
+            const titleColor = params.get('title_color') || '58a6ff';
+            const bgColor = params.get('bg_color') || '0d1117';
+            const textColor = params.get('text_color') || 'c9d1d9';
+            const accentColor = params.get('accent_color') || '58a6ff';
+
+            generateApiSvg(apiUsername, type, titleColor, bgColor, textColor, accentColor);
+        }
+
+        async function generateApiSvg(username, type, titleColor, bgColor, textColor, accentColor) {
+            try {
+                const [userRes, reposRes] = await Promise.all([
+                    fetch(`https://api.github.com/users/${username}`),
+                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`)
+                ]);
+
+                if (!userRes.ok) throw new Error('Benutzer nicht gefunden');
+
+                const user = await userRes.json();
+                const repos = await reposRes.json();
+
+                const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+                const totalForks = repos.reduce((sum, repo) => sum + repo.forks_count, 0);
+
+                let svg;
+                if (type === 'languages') {
+                    svg = generateLanguagesSvg(repos, titleColor, bgColor, textColor, accentColor);
+                } else if (type === 'streak') {
+                    svg = generateStreakSvg(user, titleColor, bgColor, textColor, accentColor);
+                } else {
+                    svg = generateStatsSvg(user, totalStars, totalForks, titleColor, bgColor, textColor, accentColor);
+                }
+
+                document.body.innerHTML = svg;
+                document.body.style.background = 'transparent';
+                document.body.style.margin = '0';
+                document.body.style.padding = '0';
+            } catch (error) {
+                document.body.innerHTML = `<svg width="500" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="500" height="100" fill="#0d1117" stroke="#f85149" stroke-width="2" rx="10"/>
+                    <text x="250" y="55" style="font: 600 16px system-ui; fill: #f85149;" text-anchor="middle">Error: ${error.message}</text>
+                </svg>`;
+            }
+        }
+
+        const themes = {
+            dark: { title: '58a6ff', bg: '0d1117', text: 'c9d1d9', accent: '58a6ff' },
+            light: { title: '0969da', bg: 'ffffff', text: '24292f', accent: '0969da' },
+            ocean: { title: '00d4ff', bg: '0a192f', text: 'ccd6f6', accent: '64ffda' },
+            sunset: { title: 'ff6b9d', bg: '1a0b2e', text: 'f0e7d8', accent: 'ffa07a' },
+            forest: { title: '7cb342', bg: '1b2b1b', text: 'd0e0d0', accent: '4caf50' },
+            neon: { title: 'ff00ff', bg: '120458', text: 'e0b3ff', accent: '00ffff' }
+        };
+
+        let currentBadgeType = 'stats';
+        let userData = null;
+
+        document.querySelectorAll('.badge-type-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.badge-type-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentBadgeType = this.dataset.type;
+                if (userData) {
+                    updatePreview();
+                }
+            });
+        });
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+            document.getElementById(tab).classList.add('active');
+            event.target.classList.add('active');
+        }
+
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            document.getElementById('titleColor').value = theme.title;
+            document.getElementById('bgColor').value = theme.bg;
+            document.getElementById('textColor').value = theme.text;
+            document.getElementById('accentColor').value = theme.accent;
+            
+            document.getElementById('titleColorPicker').value = '#' + theme.title;
+            document.getElementById('bgColorPicker').value = '#' + theme.bg;
+            document.getElementById('textColorPicker').value = '#' + theme.text;
+            document.getElementById('accentColorPicker').value = '#' + theme.accent;
+
+            document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            if (userData) {
+                updatePreview();
+                generateLinks();
+            }
+        }
+
+        ['title', 'bg', 'text', 'accent'].forEach(type => {
+            const input = document.getElementById(type + 'Color');
+            const picker = document.getElementById(type + 'ColorPicker');
+            
+            picker?.addEventListener('input', (e) => {
+                input.value = e.target.value.replace('#', '');
+                if (userData) {
+                    updatePreview();
+                    generateLinks();
+                }
+            });
+            
+            input?.addEventListener('input', (e) => {
+                picker.value = '#' + e.target.value;
+                if (userData) {
+                    updatePreview();
+                    generateLinks();
+                }
+            });
+        });
+
+        document.getElementById('username')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') generateBadge();
+        });
+
+        async function generateBadge() {
+            const username = document.getElementById('username').value.trim();
+            if (!username) {
+                alert('Bitte gib einen GitHub Username ein');
+                return;
+            }
+
+            const previewContainer = document.getElementById('previewContainer');
+            previewContainer.innerHTML = '<div class="loading-spinner"></div><div class="empty-state" style="margin-top: 20px;">Lade GitHub Daten...</div>';
+
+            try {
+                const [userRes, reposRes] = await Promise.all([
+                    fetch(`https://api.github.com/users/${username}`),
+                    fetch(`https://api.github.com/users/${username}/repos?per_page=100&sort=updated`)
+                ]);
+
+                if (!userRes.ok) throw new Error('Benutzer nicht gefunden');
+
+                const user = await userRes.json();
+                const repos = await reposRes.json();
+
+                const totalStars = repos.reduce((sum, repo) => sum + repo.stargazers_count, 0);
+                const totalForks = repos.reduce((sum, repo) => sum + repo.forks_count, 0);
+
+                userData = { user, repos, totalStars, totalForks };
+                
+                displayStats();
+                updatePreview();
+                generateLinks();
+
+            } catch (error) {
+                previewContainer.innerHTML = `<div class="empty-state" style="color: #f85149;">❌ Fehler: ${error.message}</div>`;
+            }
+        }
+
+        function displayStats() {
+            const { user, totalStars, totalForks } = userData;
+            const statsGrid = document.getElementById('statsGrid');
+            
+            statsGrid.innerHTML = `
+                <div class="stat-card">
+                    <div class="stat-value">${user.public_repos}</div>
+                    <div class="stat-label">Repositories</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${user.followers}</div>
+                    <div class="stat-label">Followers</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalStars}</div>
+                    <div class="stat-label">Total Stars</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${totalForks}</div>
+                    <div class="stat-label">Total Forks</div>
+                </div>
+            `;
+            
+            document.getElementById('statsSection').style.display = 'block';
+        }
+
+        function updatePreview() {
+            const titleColor = document.getElementById('titleColor').value;
+            const bgColor = document.getElementById('bgColor').value;
+            const textColor = document.getElementById('textColor').value;
+            const accentColor = document.getElementById('accentColor').value;
+
+            const baseUrl = window.location.href.split('?')[0];
+            const params = `username=${userData.user.login}&title_color=${titleColor}&bg_color=${bgColor}&text_color=${textColor}&accent_color=${accentColor}`;
+            
+            let previewUrl;
+            if (currentBadgeType === 'languages') {
+                previewUrl = `${baseUrl}?${params}&type=languages`;
+            } else if (currentBadgeType === 'streak') {
+                previewUrl = `${baseUrl}?${params}&type=streak`;
+            } else {
+                previewUrl = `${baseUrl}?${params}&type=stats`;
+            }
+
+            document.getElementById('previewContainer').innerHTML = `<img src="${previewUrl}" alt="Badge" class="preview-svg" />`;
+        }
+
+        function generateLinks() {
+            const titleColor = document.getElementById('titleColor').value;
+            const bgColor = document.getElementById('bgColor').value;
+            const textColor = document.getElementById('textColor').value;
+            const accentColor = document.getElementById('accentColor').value;
+
+            const baseUrl = window.location.href.split('?')[0];
+            const params = `username=${userData.user.login}&title_color=${titleColor}&bg_color=${bgColor}&text_color=${textColor}&accent_color=${accentColor}`;
+            
+            const statsUrl = `${baseUrl}?${params}&type=stats`;
+            const languagesUrl = `${baseUrl}?${params}&type=languages`;
+            const streakUrl = `${baseUrl}?${params}&type=streak`;
+
+            document.getElementById('statsLink').textContent = `![GitHub Stats](${statsUrl})`;
+            document.getElementById('languagesLink').textContent = `![Most Used Languages](${languagesUrl})`;
+            document.getElementById('streakLink').textContent = `![GitHub Streak](${streakUrl})`;
+
+            document.getElementById('linksSection').style.display = 'block';
+        }
+
+        function generateStatsSvg(user, totalStars, totalForks, titleColor, bgColor, textColor, accentColor) {
+            return `<svg width="500" height="220" xmlns="http://www.w3.org/2000/svg">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#${accentColor};stop-opacity:0.1" />
+                        <stop offset="100%" style="stop-color:#${accentColor};stop-opacity:0" />
+                    </linearGradient>
+                </defs>
+                <rect width="500" height="220" fill="#${bgColor}" stroke="#${accentColor}" stroke-width="2" rx="10"/>
+                <rect width="500" height="220" fill="url(#grad1)" rx="10"/>
+                
+                <text x="20" y="35" style="font: 700 20px system-ui; fill: #${titleColor};">GitHub Stats - ${user.login}</text>
+                <line x1="20" y1="45" x2="480" y2="45" stroke="#${accentColor}" stroke-width="2" opacity="0.5"/>
+                
+                <text x="30" y="85" style="font: 600 14px system-ui; fill: #${textColor}; opacity: 0.8;">📦 Public Repos</text>
+                <text x="420" y="85" style="font: 700 18px system-ui; fill: #${accentColor};" text-anchor="end">${user.public_repos}</text>
+                
+                <text x="30" y="120" style="font: 600 14px system-ui; fill: #${textColor}; opacity: 0.8;">⭐ Total Stars</text>
+                <text x="420" y="120" style="font: 700 18px system-ui; fill: #${accentColor};" text-anchor="end">${totalStars}</text>
+                
+                <text x="30" y="155" style="font: 600 14px system-ui; fill: #${textColor}; opacity: 0.8;">👥 Followers</text>
+                <text x="420" y="155" style="font: 700 18px system-ui; fill: #${accentColor};" text-anchor="end">${user.followers}</text>
+                
+                <text x="30" y="190" style="font: 600 14px system-ui; fill: #${textColor}; opacity: 0.8;">🍴 Total Forks</text>
+                <text x="420" y="190" style="font: 700 18px system-ui; fill: #${accentColor};" text-anchor="end">${totalForks}</text>
+            </svg>`;
+        }
+
+        function generateLanguagesSvg(repos, titleColor, bgColor, textColor, accentColor) {
+            const languages = {};
+            repos.forEach(repo => {
+                if (repo.language) {
+                    languages[repo.language] = (languages[repo.language] || 0) + 1;
+                }
+            });
+
+            const sorted = Object.entries(languages).sort((a, b) => b[1] - a[1]).slice(0, 5);
+            const total = sorted.reduce((sum, [, count]) => sum + count, 0);
+
+            let svgContent = `<svg width="500" height="${80 + sorted.length * 40}" xmlns="http://www.w3.org/2000/svg">
+                <rect width="500" height="${80 + sorted.length * 40}" fill="#${bgColor}" stroke="#${accentColor}" stroke-width="2" rx="10"/>
+                <text x="20" y="35" style="font: 700 20px system-ui; fill: #${titleColor};">Most Used Languages</text>
+                <line x1="20" y1="45" x2="480" y2="45" stroke="#${accentColor}" stroke-width="2" opacity="0.5"/>`;
+
+            sorted.forEach(([lang, count], idx) => {
+                const percentage = ((count / total) * 100).toFixed(1);
+                const barWidth = (percentage / 100) * 400;
+                const y = 80 + idx * 40;
+                
+                svgContent += `
+                    <text x="30" y="${y}" style="font: 600 14px system-ui; fill: #${textColor};">${lang}</text>
+                    <rect x="30" y="${y + 8}" width="${barWidth}" height="12" fill="#${accentColor}" rx="6" opacity="0.8"/>
+                    <text x="${40 + barWidth}" y="${y + 18}" style="font: 600 12px system-ui; fill: #${textColor};">${percentage}%</text>`;
+            });
+
+            svgContent += `</svg>`;
+            return svgContent;
+        }
+
+        function generateStreakSvg(user, titleColor, bgColor, textColor, accentColor) {
+            const joinDate = new Date(user.created_at);
+            const daysSince = Math.floor((new Date() - joinDate) / (1000 * 60 * 60 * 24));
+            
+            return `<svg width="500" height="180" xmlns="http://www.w3.org/2000/svg">
+                <rect width="500" height="180" fill="#${bgColor}" stroke="#${accentColor}" stroke-width="2" rx="10"/>
+                <text x="20" y="35" style="font: 700 20px system-ui; fill: #${titleColor};">🔥 GitHub Streak</text>
+                <line x1="20" y1="45" x2="480" y2="45" stroke="#${accentColor}" stroke-width="2" opacity="0.5"/>
+                
+                <text x="250" y="100" style="font: 700 48px system-ui; fill: #${accentColor};" text-anchor="middle">${daysSince}</text>
+                <text x="250" y="130" style="font: 600 16px system-ui; fill: #${textColor}; opacity: 0.8;" text-anchor="middle">Tage auf GitHub</text>
+                <text x="250" y="155" style="font: 500 12px system-ui; fill: #${textColor}; opacity: 0.6;" text-anchor="middle">Seit ${joinDate.toLocaleDateString('de-DE')}</text>
+            </svg>`;
+        }
+
+        function copyToClipboard(elementId, button) {
+            const text = document.getElementById(elementId).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const originalText = button.textContent;
+                button.textContent = '✓ Kopiert!';
+                button.classList.add('success');
+                setTimeout(() => {
+                    button.textContent = originalText;
+                    button.classList.remove('success');
+                }, 2000);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('username').value = '';
+            applyTheme('dark');
+            document.getElementById('previewContainer').innerHTML = '<span class="empty-state">👆 Gib einen GitHub Username ein und klicke auf Generieren</span>';
+            document.getElementById('linksSection').style.display = 'none';
+            document.getElementById('statsSection').style.display = 'none';
+            userData = null;
+        }
+    </script>
 </body>
 </html>

@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitStats - GitHub Badge Generator</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚡ GitStats by Kai</h1>
+            <p>Create Cool GitHub Stats Badges</p>
+            <span class="badge">✨ SVG Download for GitHub README</span>
+        </div>
+
+        <div class="alert">
+            <strong>⚠️ Important Note:</strong>
+            HTML-based badge links maybe don't work directly on GitHub. You must <strong>download</strong> the generated SVG files and upload them directly to your repository. Alternatively, you can use a service like <strong>shields.io</strong> or your own backend server.
+        </div>
+
+        <div class="content-grid">
+            <!-- Settings Sidebar -->
+            <div class="card">
+                <h2>⚙️ Settings</h2>
+
+                <div class="form-group">
+                    <label>GitHub Username</label>
+                    <input type="text" id="username" placeholder="e.g. torvalds" />
+                </div>
+
+                <div class="tabs">
+                    <button class="tab-btn active" onclick="switchTab('themes')">Themes</button>
+                    <button class="tab-btn" onclick="switchTab('custom')">Custom</button>
+                </div>
+
+                <!-- Themes Tab -->
+                <div id="themes" class="tab-content active">
+                    <div class="theme-presets">
+                        <button class="theme-btn active" onclick="applyTheme('dark')">🌙 Dark</button>
+                        <button class="theme-btn" onclick="applyTheme('light')">☀️ Light</button>
+                        <button class="theme-btn" onclick="applyTheme('ocean')">🌊 Ocean</button>
+                        <button class="theme-btn" onclick="applyTheme('sunset')">🌅 Sunset</button>
+                        <button class="theme-btn" onclick="applyTheme('forest')">🌲 Forest</button>
+                        <button class="theme-btn" onclick="applyTheme('neon')">💜 Neon</button>
+                    </div>
+                </div>
+
+                <!-- Custom Tab -->
+                <div id="custom" class="tab-content">
+                    <div class="form-group">
+                        <label>Title Color</label>
+                        <div class="color-input-group">
+                            <input type="text" id="titleColor" value="58a6ff" />
+                            <input type="color" id="titleColorPicker" class="color-picker" value="#58a6ff" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Background</label>
+                        <div class="color-input-group">
+                            <input type="text" id="bgColor" value="0d1117" />
+                            <input type="color" id="bgColorPicker" class="color-picker" value="#0d1117" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Text Color</label>
+                        <div class="color-input-group">
+                            <input type="text" id="textColor" value="c9d1d9" />
+                            <input type="color" id="textColorPicker" class="color-picker" value="#c9d1d9" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Accent Color</label>
+                        <div class="color-input-group">
+                            <input type="text" id="accentColor" value="58a6ff" />
+                            <input type="color" id="accentColorPicker" class="color-picker" value="#58a6ff" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    💡 Choose a theme or customize colors, then download the SVGs!
+                </div>
+
+                <div class="button-group">
+                    <button class="btn btn-generate" onclick="generateBadge()">🚀 Generate</button>
+                    <button class="btn btn-reset" onclick="resetForm()">↺ Reset</button>
+                </div>
+            </div>
+
+            <!-- Preview & Results -->
+            <div class="card">
+                <h2>👁️ Preview & Download</h2>
+                
+                <div class="badge-types">
+                    <button class="badge-type-btn active" data-type="stats" onclick="switchBadgeType('stats')">📊 Stats</button>
+                    <button class="badge-type-btn" data-type="languages" onclick="switchBadgeType('languages')">💻 Languages</button>
+                    <button class="badge-type-btn" data-type="streak" onclick="switchBadgeType('streak')">🔥 Streak</button>
+                </div>
+
+                <div class="preview-container" id="previewContainer">
+                    <span class="empty-state">👆 Enter a GitHub username and click Generate</span>
+                </div>
+
+                <div id="statsSection" style="display: none;">
+                    <div class="stats-grid" id="statsGrid"></div>
+                </div>
+
+                <div id="downloadSection" style="display: none;">
+                    <h3 style="color: #58a6ff; margin: 25px 0 15px 0; font-size: 1.1em;">💾 Downloads for your README:</h3>
+                    
+                    <!-- Stats Badge -->
+                    <div class="badge-link-section">
+                        <div class="badge-link-header">
+                            📊 GitHub Stats Badge
+                        </div>
+                        <div class="download-section">
+                            <button class="download-btn" onclick="downloadSVG('stats')">💾 Download SVG</button>
+                            <button class="copy-btn" onclick="copyMarkdown('stats', this)" style="flex: 1;">📋 Copy Markdown</button>
+                        </div>
+                        <div class="code-output" id="statsMarkdown" style="margin-top: 10px; display: none;"></div>
+                    </div>
+
+                    <!-- Languages Badge -->
+                    <div class="badge-link-section">
+                        <div class="badge-link-header">
+                            💻 Most Used Languages Badge
+                        </div>
+                        <div class="download-section">
+                            <button class="download-btn" onclick="downloadSVG('languages')">💾 Download SVG</button>
+                            <button class="copy-btn" onclick="copyMarkdown('languages', this)" style="flex: 1;">📋 Copy Markdown</button>
+                        </div>
+                        <div class="code-output" id="languagesMarkdown" style="margin-top: 10px; display: none;"></div>
+                    </div>
+
+                    <!-- Streak Badge -->
+                    <div class="badge-link-section">
+                        <div class="badge-link-header">
+                            🔥 GitHub Streak Badge
+                        </div>
+                        <div class="download-section">
+                            <button class="download-btn" onclick="downloadSVG('streak')">💾 Download SVG</button>
+                            <button class="copy-btn" onclick="copyMarkdown('streak', this)" style="flex: 1;">📋 Copy Markdown</button>
+                        </div>
+                        <div class="code-output" id="streakMarkdown" style="margin-top: 10px; display: none;"></div>
+                    </div>
+
+                    <div class="info-box">
+                        <strong>📝 How to use the badges:</strong><br>
+                        1. Click "Download SVG" for each badge<br>
+                        2. Upload the SVG files to your GitHub repository (e.g. in a "badges" folder)<br>
+                        3. Then use in your README: <code>![Badge Name](./badges/filename.svg)</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
